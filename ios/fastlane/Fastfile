@@ -14,7 +14,7 @@ platform :ios do
       workspace: "Runner.xcworkspace",
       scheme: "Runner",
       export_method: "app-store",
-      team_id: "5T6RH58JQ6",
+      export_team_id: "5T6RH58JQ6",
       skip_profile_detection: true
     )
 

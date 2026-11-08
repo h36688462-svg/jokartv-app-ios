@@ -10,10 +10,9 @@ platform :ios do
       key_filepath: "fastlane/AuthKey.p8"
     )
 
-    update_code_signing_settings(
-      use_automatic_signing: true,
+    update_project_team(
       team_id: "5T6RH58JQ6",
-      path: "Runner.xcodeproj"
+      xcodeproj: "Runner.xcodeproj"
     )
 
     build_app(
@@ -21,6 +20,7 @@ platform :ios do
       scheme: "Runner",
       export_method: "app-store",
       export_team_id: "5T6RH58JQ6",
+      xcargs: "DEVELOPMENT_TEAM=5T6RH58JQ6",
       skip_profile_detection: true
     )
 

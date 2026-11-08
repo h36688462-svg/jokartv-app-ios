@@ -11,8 +11,8 @@ platform :ios do
     )
 
     update_project_team(
-      team_id: "5T6RH58JQ6",
-      xcodeproj: "Runner.xcodeproj"
+      teamid: "5T6RH58JQ6",
+      path: "Runner.xcodeproj"
     )
 
     build_app(

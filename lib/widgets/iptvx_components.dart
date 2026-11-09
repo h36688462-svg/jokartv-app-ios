@@ -96,6 +96,8 @@ class _IptvxContinueWatchingRowState extends State<IptvxContinueWatchingRow> {
                                   ? CachedNetworkImage(
                                       imageUrl: item.streamIcon!,
                                       fit: BoxFit.cover,
+                                      memCacheWidth: 400,
+                                      memCacheHeight: 250,
                                       errorWidget: (_, __, ___) => Container(color: const Color(0xFF1F1F1F)),
                                     )
                                   : Container(color: const Color(0xFF1F1F1F)),
@@ -202,12 +204,16 @@ class IptvxHeroBillboard extends StatelessWidget {
                 CachedNetworkImage(
                   imageUrl: backdrop,
                   fit: BoxFit.cover,
+                  memCacheWidth: 1280,
+                  memCacheHeight: 720,
                   errorWidget: (_, __, ___) => Container(color: const Color(0xFF141414)),
                 )
               else if (featured.streamIcon != null)
                 CachedNetworkImage(
                   imageUrl: featured.streamIcon!,
                   fit: BoxFit.cover,
+                  memCacheWidth: 400,
+                  memCacheHeight: 600,
                 )
               else
                 Container(color: const Color(0xFF141414)),
@@ -239,6 +245,8 @@ class IptvxHeroBillboard extends StatelessWidget {
                         imageUrl: clearLogo,
                         height: 65,
                         fit: BoxFit.contain,
+                        memCacheWidth: 500,
+                        memCacheHeight: 200,
                         errorWidget: (_, __, ___) => Text(
                           featured.name,
                           textAlign: TextAlign.center,
@@ -381,6 +389,8 @@ class IptvxTop20Row extends StatelessWidget {
                                         ? CachedNetworkImage(
                                             imageUrl: item.streamIcon!,
                                             fit: BoxFit.cover,
+                                            memCacheWidth: 250,
+                                            memCacheHeight: 350,
                                             errorWidget: (_, __, ___) => _buildPlaceholder(item.name),
                                             placeholder: (_, __) => _buildPlaceholder(item.name),
                                           )

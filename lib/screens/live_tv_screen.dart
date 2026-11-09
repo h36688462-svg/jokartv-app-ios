@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/iptv_models.dart';
 import '../providers/auth_provider.dart';
 import '../providers/iptv_provider.dart';
+import '../widgets/tv_focus_wrapper.dart';
 import 'player_screen.dart';
 
 class LiveTvScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
   String _selectedCategoryId = '';
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -31,8 +33,14 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
     final iptv = Provider.of<IptvProvider>(context);
 
     // Filter live streams based on selected category or search, excluding movies/vod/series
@@ -58,125 +66,156 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
       body: Row(
         children: [
           // Left Sidebar: Server Categories & Groups with Channel Counts
-          Container(
-            width: 260,
-            color: const Color(0xFF0F172A),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'CATEGORIES',
-                    style: TextStyle(color: Color(0xFF3B82F6), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          FocusTraversalGroup(
+            policy: ReadingOrderTraversalPolicy(),
+            child: Container(
+              width: 260,
+              color: const Color(0xFF0F172A),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text(
+                      'CATEGORIES',
+                      style: TextStyle(color: Color(0xFF3B82F6), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    itemCount: iptv.dashboardCategories.length,
-                    itemBuilder: (context, index) {
-                      final cat = iptv.dashboardCategories[index];
-                      final liveCount = cat.items.where((item) => item.streamType != 'movies' && item.streamType != 'vod' && item.streamType != 'series').length;
-                      IconData icon = Icons.tv;
-                      final nameLower = cat.categoryName.toLowerCase();
-                      if (nameLower.contains('sport')) icon = Icons.sports_soccer;
-                      else if (nameLower.contains('news')) icon = Icons.newspaper;
-                      else if (nameLower.contains('movie') || nameLower.contains('cinema')) icon = Icons.movie;
-                      else if (nameLower.contains('kids') || nameLower.contains('animation')) icon = Icons.child_care;
-                      else if (nameLower.contains('islam') || nameLower.contains('quran')) icon = Icons.mosque;
-                      else if (nameLower.contains('music')) icon = Icons.music_note;
-                      else if (nameLower.contains('all')) icon = Icons.all_inclusive;
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      itemCount: iptv.dashboardCategories.length,
+                      itemBuilder: (context, index) {
+                        final cat = iptv.dashboardCategories[index];
+                        final liveCount = cat.items.where((item) => item.streamType != 'movies' && item.streamType != 'vod' && item.streamType != 'series').length;
+                        IconData icon = Icons.tv;
+                        final nameLower = cat.categoryName.toLowerCase();
+                        if (nameLower.contains('sport')) {
+                          icon = Icons.sports_soccer;
+                        } else if (nameLower.contains('news')) {
+                          icon = Icons.newspaper;
+                        } else if (nameLower.contains('movie') || nameLower.contains('cinema')) {
+                          icon = Icons.movie;
+                        } else if (nameLower.contains('kids') || nameLower.contains('animation')) {
+                          icon = Icons.child_care;
+                        } else if (nameLower.contains('islam') || nameLower.contains('quran')) {
+                          icon = Icons.mosque;
+                        } else if (nameLower.contains('music')) {
+                          icon = Icons.music_note;
+                        } else if (nameLower.contains('all')) {
+                          icon = Icons.all_inclusive;
+                        }
 
-                      return _buildCategoryTile(cat.categoryId, cat.categoryName, icon, liveCount);
-                    },
+                        return _buildCategoryTile(cat.categoryId, cat.categoryName, icon, liveCount, autofocus: index == 0);
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
           // IPTVX Right Main Area: Search Bar & Channel Grid with TV Focus & Quality Badges
           Expanded(
-            child: Column(
-              children: [
-                // Search Bar
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: TextField(
-                    controller: _searchController,
-                    onTap: () {
-                      SystemChannels.textInput.invokeMethod('TextInput.show');
-                    },
-                    onChanged: (val) {
-                      setState(() {
-                        _searchQuery = val;
-                      });
-                    },
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Search channel name (e.g. BEIN Sports, MBC 1)...',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                      filled: true,
-                      fillColor: const Color(0xFF1E293B),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+            child: FocusTraversalGroup(
+              policy: ReadingOrderTraversalPolicy(),
+              child: Column(
+                children: [
+                  // Search Bar with TV Remote Focus handling
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Focus(
+                      focusNode: _searchFocusNode,
+                      onKeyEvent: (node, event) {
+                        if (event is KeyDownEvent) {
+                          if (event.logicalKey == LogicalKeyboardKey.escape ||
+                              event.logicalKey == LogicalKeyboardKey.goBack) {
+                            node.unfocus();
+                            return KeyEventResult.handled;
+                          }
+                          if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
+                              event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                            node.unfocus();
+                            return KeyEventResult.handled;
+                          }
+                        }
+                        return KeyEventResult.ignored;
+                      },
+                      child: TextField(
+                        controller: _searchController,
+                        onTap: () {
+                          SystemChannels.textInput.invokeMethod('TextInput.show');
+                        },
+                        onChanged: (val) {
+                          setState(() {
+                            _searchQuery = val;
+                          });
+                        },
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Search channel name (e.g. BEIN Sports, MBC 1)...',
+                          hintStyle: const TextStyle(color: Colors.grey),
+                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                          filled: true,
+                          fillColor: const Color(0xFF1E293B),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                        ),
+                      ),
                     ),
                   ),
-                ),
 
-                // Channels Grid View
-                Expanded(
-                  child: filteredChannels.isEmpty
-                      ? const Center(
-                          child: Text('No channels found in this category.', style: TextStyle(color: Colors.grey, fontSize: 16)),
-                        )
-                      : GridView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 180,
-                            childAspectRatio: 0.9,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                          itemCount: filteredChannels.length,
-                          itemBuilder: (context, index) {
-                            final channel = filteredChannels[index];
-                            final upperName = channel.name.toUpperCase();
-                            String quality = 'LIVE';
-                            Color badgeColor = const Color(0xFF475569);
-                            if (upperName.contains('4K')) {
-                              quality = '4K';
-                              badgeColor = const Color(0xFFE11D48);
-                            } else if (upperName.contains('FHD')) {
-                              quality = 'FHD';
-                              badgeColor = const Color(0xFF7C3AED);
-                            } else if (upperName.contains('HD')) {
-                              quality = 'HD';
-                              badgeColor = const Color(0xFF2563EB);
-                            }
+                  // Channels Grid View
+                  Expanded(
+                    child: filteredChannels.isEmpty
+                        ? const Center(
+                            child: Text('No channels found in this category.', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                          )
+                        : GridView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 180,
+                              childAspectRatio: 0.9,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                            itemCount: filteredChannels.length,
+                            itemBuilder: (context, index) {
+                              final channel = filteredChannels[index];
+                              final upperName = channel.name.toUpperCase();
+                              String quality = 'LIVE';
+                              Color badgeColor = const Color(0xFF475569);
+                              if (upperName.contains('4K')) {
+                                quality = '4K';
+                                badgeColor = const Color(0xFFE11D48);
+                              } else if (upperName.contains('FHD')) {
+                                quality = 'FHD';
+                                badgeColor = const Color(0xFF7C3AED);
+                              } else if (upperName.contains('HD')) {
+                                quality = 'HD';
+                                badgeColor = const Color(0xFF2563EB);
+                              }
 
-                            return Focus(
-                              child: Builder(
-                                builder: (context) {
-                                  final isFocused = Focus.of(context).hasFocus;
-                                  return InkWell(
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute<dynamic>(
-                                          builder: (_) => PlayerScreen(
-                                            streamId: channel.streamId,
-                                            streamType: 'live',
-                                            streamName: channel.name,
-                                            containerExtension: channel.containerExtension,
-                                            playlistChannels: filteredChannels,
-                                            currentChannelIndex: index,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: Container(
+                              return TvFocusWrapper(
+                                autofocus: index == 0,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<dynamic>(
+                                      builder: (_) => PlayerScreen(
+                                        streamId: channel.streamId,
+                                        streamType: 'live',
+                                        streamName: channel.name,
+                                        containerExtension: channel.containerExtension,
+                                        playlistChannels: filteredChannels,
+                                        currentChannelIndex: index,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(10),
+                                child: Builder(
+                                  builder: (context) {
+                                    final isFocused = Focus.of(context).hasFocus;
+                                    return Container(
                                       decoration: BoxDecoration(
                                         color: isFocused ? const Color(0xFF1E293B) : const Color(0xFF0F172A),
                                         borderRadius: BorderRadius.circular(10),
@@ -200,6 +239,8 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
                                                             fit: BoxFit.contain,
                                                             width: 64,
                                                             height: 64,
+                                                            memCacheWidth: 150,
+                                                            memCacheHeight: 150,
                                                             errorWidget: (context, url, error) => const Icon(Icons.tv, color: Colors.white54, size: 32),
                                                           )
                                                         : const Icon(Icons.tv, color: Colors.white54, size: 32),
@@ -248,15 +289,15 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
                                           ),
                                         ],
                                       ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ],
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -264,54 +305,52 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
     );
   }
 
-  Widget _buildCategoryTile(String id, String title, IconData icon, int count) {
-    return Focus(
+  Widget _buildCategoryTile(String id, String title, IconData icon, int count, {bool autofocus = false}) {
+    final isSelected = _selectedCategoryId == id;
+    return TvFocusWrapper(
+      autofocus: autofocus,
+      onTap: () {
+        setState(() {
+          _selectedCategoryId = id;
+        });
+      },
+      borderRadius: BorderRadius.circular(8),
+      margin: const EdgeInsets.symmetric(vertical: 2),
       child: Builder(
         builder: (context) {
           final isFocused = Focus.of(context).hasFocus;
-          final isSelected = _selectedCategoryId == id;
           if (isFocused) {
             Scrollable.ensureVisible(context, alignment: 0.5, duration: const Duration(milliseconds: 150));
           }
-          return Material(
-            color: Colors.transparent,
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 2),
-              decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF3B82F6) : (isFocused ? const Color(0xFF1E293B) : Colors.transparent),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: isFocused ? Colors.white : Colors.transparent, width: 1.5),
+          return Container(
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFF3B82F6) : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ListTile(
+              leading: Icon(icon, color: isSelected || isFocused ? Colors.white : Colors.grey, size: 20),
+              title: Text(
+                title,
+                style: TextStyle(
+                  color: isSelected || isFocused ? Colors.white : Colors.white70,
+                  fontSize: 13,
+                  fontWeight: isSelected || isFocused ? FontWeight.bold : FontWeight.normal,
+                ),
               ),
-              child: ListTile(
-                leading: Icon(icon, color: isSelected || isFocused ? Colors.white : Colors.grey, size: 20),
-                title: Text(
-                  title,
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white24 : const Color(0xFF1E293B),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$count',
                   style: TextStyle(
-                    color: isSelected || isFocused ? Colors.white : Colors.white70,
-                    fontSize: 13,
-                    fontWeight: isSelected || isFocused ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected || isFocused ? Colors.white : Colors.grey,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.white24 : const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: TextStyle(
-                      color: isSelected || isFocused ? Colors.white : Colors.grey,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                onTap: () {
-                  setState(() {
-                    _selectedCategoryId = id;
-                  });
-                },
               ),
             ),
           );

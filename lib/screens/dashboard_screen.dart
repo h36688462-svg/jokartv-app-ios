@@ -151,17 +151,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const Icon(Icons.search, color: Color(0xFF3B82F6), size: 28),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: TextField(
-                            autofocus: true,
-                            style: const TextStyle(color: Colors.white, fontSize: 18),
-                            decoration: const InputDecoration(
-                              hintText: 'Search channels, movies, series...',
-                              hintStyle: TextStyle(color: Colors.grey),
-                              border: InputBorder.none,
-                            ),
-                            onChanged: (val) {
-                              setDialogState(() => query = val);
+                          child: Focus(
+                            onKeyEvent: (node, event) {
+                              if (event is KeyDownEvent) {
+                                if (event.logicalKey == LogicalKeyboardKey.escape ||
+                                    event.logicalKey == LogicalKeyboardKey.goBack ||
+                                    event.logicalKey == LogicalKeyboardKey.arrowDown ||
+                                    event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                                  node.unfocus();
+                                  return KeyEventResult.handled;
+                                }
+                              }
+                              return KeyEventResult.ignored;
                             },
+                            child: TextField(
+                              autofocus: true,
+                              style: const TextStyle(color: Colors.white, fontSize: 18),
+                              decoration: const InputDecoration(
+                                hintText: 'Search channels, movies, series...',
+                                hintStyle: TextStyle(color: Colors.grey),
+                                border: InputBorder.none,
+                              ),
+                              onChanged: (val) {
+                                setDialogState(() => query = val);
+                              },
+                            ),
                           ),
                         ),
                         IconButton(

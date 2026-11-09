@@ -30,6 +30,9 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Build iOS Release (Prepare Plugins)
+        run: flutter build ios --release --no-codesign
+
       - name: Install Apple Certificate & Provisioning Profile
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}

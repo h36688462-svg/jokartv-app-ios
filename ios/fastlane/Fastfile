@@ -15,6 +15,15 @@ platform :ios do
       path: "Runner.xcodeproj"
     )
 
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      team_id: "5T6RH58JQ6",
+      bundle_identifier: "com.jokartv.app",
+      code_sign_identity: "Apple Distribution",
+      profile_uuid: ENV["PROVISIONING_PROFILE_UUID"],
+      path: "Runner.xcodeproj"
+    )
+
     build_app(
       workspace: "Runner.xcworkspace",
       scheme: "Runner",

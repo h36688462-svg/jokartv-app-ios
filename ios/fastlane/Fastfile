@@ -20,8 +20,16 @@ platform :ios do
       scheme: "Runner",
       export_method: "app-store",
       export_team_id: "5T6RH58JQ6",
+      export_options: {
+        method: "app-store",
+        teamID: "5T6RH58JQ6",
+        signingStyle: "manual",
+        provisioningProfiles: {
+          "com.jokartv.app" => ENV["PROVISIONING_PROFILE_UUID"]
+        }
+      },
       xcargs: "DEVELOPMENT_TEAM=5T6RH58JQ6 -allowProvisioningUpdates",
-      skip_profile_detection: true
+      skip_profile_detection: false
     )
 
     upload_to_testflight(

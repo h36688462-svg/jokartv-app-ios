@@ -20,7 +20,7 @@ platform :ios do
       scheme: "Runner",
       export_method: "app-store",
       export_team_id: "5T6RH58JQ6",
-      xcargs: "DEVELOPMENT_TEAM=5T6RH58JQ6",
+      xcargs: "DEVELOPMENT_TEAM=5T6RH58JQ6 -allowProvisioningUpdates",
       skip_profile_detection: true
     )
 

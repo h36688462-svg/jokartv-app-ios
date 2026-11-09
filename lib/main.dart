@@ -14,7 +14,7 @@ import 'screens/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (!kIsWeb && Platform.isWindows) {
+  if (!kIsWeb) {
     try {
       MediaKit.ensureInitialized();
     } catch (_) {}

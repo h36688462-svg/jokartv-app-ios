@@ -144,7 +144,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
       _controller = VideoPlayerController.networkUrl(
         Uri.parse(url),
-        httpHeaders: const {
+        httpHeaders: (!kIsWeb && Platform.isIOS) ? const {} : const {
           'User-Agent': 'VLC/3.0.16 LibVLC/3.0.16',
           'Accept': '*/*',
         },
@@ -170,25 +170,32 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
       _startHideControlsTimer();
     } catch (e) {
-      try {
-        _useMediaKit = true;
-        _mkPlayer = mk.Player();
-        _mkVideoController = mk_video.VideoController(_mkPlayer!);
-        await _mkPlayer!.open(mk.Media(url));
-        _mkPlayer!.play();
+      if (!kIsWeb && Platform.isWindows) {
+        try {
+          _useMediaKit = true;
+          _mkPlayer = mk.Player();
+          _mkVideoController = mk_video.VideoController(_mkPlayer!);
+          await _mkPlayer!.open(mk.Media(url));
+          _mkPlayer!.play();
 
-        setState(() {
-          _isLoading = false;
-          _isPlaying = true;
-        });
-        _startHideControlsTimer();
-        return;
-      } catch (e2) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Failed to load video stream.\nPlease check connection or subscription.\n\nDetails: $e2';
-        });
+          setState(() {
+            _isLoading = false;
+            _isPlaying = true;
+          });
+          _startHideControlsTimer();
+          return;
+        } catch (e2) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'Failed to load video stream.\nPlease check connection or subscription.\n\nDetails: $e2';
+          });
+          return;
+        }
       }
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Failed to load video stream.\nPlease check connection or subscription.\n\nDetails: $e';
+      });
     }
   }
 

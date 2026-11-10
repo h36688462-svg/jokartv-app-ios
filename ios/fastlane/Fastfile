@@ -4,23 +4,19 @@ platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
     # Ensure App Store Connect API Key is used
+    key_id = ENV["APP_STORE_CONNECT_API_KEY_ID"] || ENV["APPSTORE_KEY_ID"]
+    issuer_id = ENV["APP_STORE_CONNECT_API_ISSUER_ID"] || ENV["APPSTORE_ISSUER_ID"]
+    priv_key = ENV["APP_STORE_CONNECT_API_PRIVATE_KEY"] || ENV["APPSTORE_PRIVATE_KEY"]
+
     app_store_connect_api_key(
-      key_id: ENV["APPSTORE_KEY_ID"],
-      issuer_id: ENV["APPSTORE_ISSUER_ID"],
-      key_filepath: "fastlane/AuthKey.p8"
+      key_id: key_id,
+      issuer_id: issuer_id,
+      key_content: priv_key,
+      is_key_content_base64: false
     )
 
     update_project_team(
       teamid: "5T6RH58JQ6",
-      path: "Runner.xcodeproj"
-    )
-
-    update_code_signing_settings(
-      use_automatic_signing: false,
-      team_id: "5T6RH58JQ6",
-      bundle_identifier: "com.jokartv.app",
-      code_sign_identity: "Apple Distribution",
-      profile_uuid: ENV["PROVISIONING_PROFILE_UUID"],
       path: "Runner.xcodeproj"
     )
 
@@ -29,20 +25,16 @@ platform :ios do
       scheme: "Runner",
       export_method: "app-store",
       export_team_id: "5T6RH58JQ6",
-      export_options: {
-        method: "app-store",
-        teamID: "5T6RH58JQ6",
-        signingStyle: "manual",
-        provisioningProfiles: {
-          "com.jokartv.app" => ENV["PROVISIONING_PROFILE_UUID"]
-        }
-      },
       xcargs: "DEVELOPMENT_TEAM=5T6RH58JQ6 -allowProvisioningUpdates",
-      skip_profile_detection: false
+      skip_profile_detection: true
     )
 
     upload_to_testflight(
       skip_waiting_for_build_processing: true
     )
+  end
+
+  lane :release do
+    beta
   end
 end

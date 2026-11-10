@@ -14,6 +14,7 @@ import '../providers/auth_provider.dart';
 import '../services/iptv_api_client.dart';
 import '../services/storage_service.dart';
 import '../models/iptv_models.dart';
+import '../widgets/tv_focus_wrapper.dart';
 
 class PlayerScreen extends StatefulWidget {
   final String streamId;
@@ -324,7 +325,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
       backgroundColor: Colors.black,
       body: Focus(
         autofocus: true,
-        onKey: (node, event) {
+        onKeyEvent: (node, event) {
           if (event is KeyDownEvent) {
             final key = event.logicalKey;
 
@@ -476,9 +477,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           child: Row(
                             children: [
-                              IconButton(
-                                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-                                onPressed: () => Navigator.of(context).pop(),
+                              TvFocusWrapper(
+                                onTap: () => Navigator.of(context).pop(),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -489,9 +493,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              IconButton(
-                                icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border, color: _isFavorite ? const Color(0xFFE50914) : Colors.white, size: 26),
-                                onPressed: _toggleFavorite,
+                              TvFocusWrapper(
+                                onTap: _toggleFavorite,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border, color: _isFavorite ? const Color(0xFFE50914) : Colors.white, size: 26),
+                                ),
                               ),
                             ],
                           ),
@@ -502,28 +509,26 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             if (widget.streamType == 'live') ...[
-                              IconButton(
-                                iconSize: 48,
-                                color: Colors.white,
-                                tooltip: 'Previous Channel',
-                                icon: const Icon(Icons.skip_previous),
-                                onPressed: () => _switchChannel(-1),
+                              TvFocusWrapper(
+                                onTap: () => _switchChannel(-1),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: Icon(Icons.skip_previous, color: Colors.white, size: 42),
+                                ),
                               ),
                               const SizedBox(width: 32),
                             ],
                             if (widget.streamType != 'live')
-                              IconButton(
-                                iconSize: 42,
-                                color: Colors.white,
-                                icon: const Icon(Icons.replay_10),
-                                onPressed: () => _seekRelative(const Duration(seconds: -10)),
+                              TvFocusWrapper(
+                                onTap: () => _seekRelative(const Duration(seconds: -10)),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: Icon(Icons.replay_10, color: Colors.white, size: 38),
+                                ),
                               ),
                             const SizedBox(width: 32),
-                            IconButton(
-                              iconSize: 68,
-                              color: Colors.white,
-                              icon: Icon(_isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled),
-                              onPressed: () {
+                            TvFocusWrapper(
+                              onTap: () {
                                 setState(() {
                                   if (_isPlaying) {
                                     _controller?.pause();
@@ -535,23 +540,28 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 });
                                 _startHideControlsTimer();
                               },
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Icon(_isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled, color: Colors.white, size: 60),
+                              ),
                             ),
                             const SizedBox(width: 32),
                             if (widget.streamType != 'live')
-                              IconButton(
-                                iconSize: 42,
-                                color: Colors.white,
-                                icon: const Icon(Icons.forward_10),
-                                onPressed: () => _seekRelative(const Duration(seconds: 10)),
+                              TvFocusWrapper(
+                                onTap: () => _seekRelative(const Duration(seconds: 10)),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: Icon(Icons.forward_10, color: Colors.white, size: 38),
+                                ),
                               ),
                             if (widget.streamType == 'live') ...[
                               const SizedBox(width: 32),
-                              IconButton(
-                                iconSize: 48,
-                                color: Colors.white,
-                                tooltip: 'Next Channel',
-                                icon: const Icon(Icons.skip_next),
-                                onPressed: () => _switchChannel(1),
+                              TvFocusWrapper(
+                                onTap: () => _switchChannel(1),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: Icon(Icons.skip_next, color: Colors.white, size: 42),
+                                ),
                               ),
                             ],
                           ],
@@ -610,10 +620,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.aspect_ratio, color: Colors.white, size: 24),
-                                    tooltip: 'Aspect Ratio',
-                                    onPressed: _cycleAspectRatio,
+                                  TvFocusWrapper(
+                                    onTap: _cycleAspectRatio,
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: Icon(Icons.aspect_ratio, color: Colors.white, size: 24),
+                                    ),
                                   ),
                                 ],
                               ),

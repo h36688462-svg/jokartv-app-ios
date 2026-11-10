@@ -11,6 +11,7 @@ import 'providers/iptv_provider.dart';
 import 'providers/parental_control_provider.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/login_screen.dart';
+import 'widgets/tv_global_focus_root.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,7 @@ class SmartIptvApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Smart IPTV',
         debugShowCheckedModeBanner: false,
+        builder: (context, child) => TvGlobalFocusRoot(child: child ?? const SizedBox.shrink()),
         theme: ThemeData(
           brightness: Brightness.dark,
           scaffoldBackgroundColor: const Color(0xFF0B0B0B),

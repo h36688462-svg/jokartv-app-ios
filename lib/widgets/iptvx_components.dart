@@ -7,11 +7,13 @@ import '../services/storage_service.dart';
 class IptvxContinueWatchingRow extends StatefulWidget {
   final List<StreamItem> items;
   final Function(StreamItem) onPlay;
+  final String sectionType;
 
   const IptvxContinueWatchingRow({
     super.key,
     required this.items,
     required this.onPlay,
+    this.sectionType = 'movies',
   });
 
   @override
@@ -19,35 +21,34 @@ class IptvxContinueWatchingRow extends StatefulWidget {
 }
 
 class _IptvxContinueWatchingRowState extends State<IptvxContinueWatchingRow> {
-  final Map<String, double> _progressMap = {};
+  List<StreamItem> _historyItems = [];
 
   @override
   void initState() {
     super.initState();
-    _loadProgress();
+    _loadHistory();
   }
 
-  Future<void> _loadProgress() async {
-    final map = <String, double>{};
-    for (var item in widget.items) {
-      final ms = await StorageService.getProgress(item.streamId);
-      if (ms > 0) {
-        const totalDuration = 7200000.0;
-        double progress = (ms / totalDuration).clamp(0.05, 0.95);
-        map[item.streamId] = progress;
+  Future<void> _loadHistory() async {
+    final history = await StorageService.getHistory();
+    final filtered = history.where((item) {
+      if (widget.sectionType == 'series') {
+        return item.streamType == 'series';
+      } else {
+        return item.streamType == 'movies' || item.streamType == 'vod' || item.streamType.isEmpty;
       }
-    }
+    }).toList();
+
     if (mounted) {
       setState(() {
-        _progressMap.addAll(map);
+        _historyItems = filtered;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final watchableItems = widget.items.where((item) => _progressMap.containsKey(item.streamId)).toList();
-    if (watchableItems.isEmpty) return const SizedBox.shrink();
+    if (_historyItems.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,10 +66,10 @@ class _IptvxContinueWatchingRowState extends State<IptvxContinueWatchingRow> {
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: watchableItems.length,
+            itemCount: _historyItems.length,
             itemBuilder: (context, index) {
-              final item = watchableItems[index];
-              final progress = _progressMap[item.streamId] ?? 0.0;
+              final item = _historyItems[index];
+              const progress = 0.5;
 
               return FocusableActionDetector(
                 child: Builder(

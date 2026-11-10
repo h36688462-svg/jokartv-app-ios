@@ -65,6 +65,35 @@ class StorageService {
     await p.setInt('progress_$streamId', positionMs);
   }
 
+  // Watch History
+  static const String keyHistory = 'watch_history_items';
+
+  static Future<List<StreamItem>> getHistory() async {
+    final p = await prefs;
+    final jsonStr = p.getString(keyHistory) ?? '[]';
+    try {
+      final List<dynamic> decoded = json.decode(jsonStr) as List<dynamic>;
+      return decoded
+          .whereType<Map<String, dynamic>>()
+          .map((e) => StreamItem.fromJson(e, e['streamType'] ?? 'movies'))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<void> addToHistory(StreamItem item) async {
+    final p = await prefs;
+    List<StreamItem> history = await getHistory();
+    history.removeWhere((i) => i.streamId == item.streamId);
+    history.insert(0, item);
+    if (history.length > 20) {
+      history = history.sublist(0, 20);
+    }
+    final encoded = json.encode(history.map((e) => e.toJson()).toList());
+    await p.setString(keyHistory, encoded);
+  }
+
   // Saved Accounts
   static Future<List<UserAccount>> getSavedAccounts() async {
     final p = await prefs;

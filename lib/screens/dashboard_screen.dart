@@ -423,6 +423,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     return IptvxContinueWatchingRow(
                                       items: allItems,
                                       onPlay: (item) => _onStreamSelected(item),
+                                      sectionType: iptv.currentTab,
                                     );
                                   } else if (index == 2) {
                                     return IptvxTop20Row(

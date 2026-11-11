@@ -51,4 +51,35 @@ platform :ios do
   lane :release do
     beta
   end
+
+  desc "Push a new tvOS build to TestFlight"
+  lane :tvos do
+    key_id = ENV["APP_STORE_CONNECT_API_KEY_ID"] || ENV["APPSTORE_KEY_ID"]
+    issuer_id = ENV["APP_STORE_CONNECT_API_ISSUER_ID"] || ENV["APPSTORE_ISSUER_ID"]
+
+    app_store_connect_api_key(
+      key_id: key_id,
+      issuer_id: issuer_id,
+      key_filepath: "fastlane/AuthKey.p8"
+    )
+
+    update_project_team(
+      teamid: "5T6RH58JQ6",
+      path: "Runner.xcodeproj"
+    )
+
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      destination: "generic/platform=tvOS",
+      export_method: "app-store",
+      export_team_id: "5T6RH58JQ6",
+      xcargs: "DEVELOPMENT_TEAM=5T6RH58JQ6 -allowProvisioningUpdates",
+      skip_profile_detection: true
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
 end

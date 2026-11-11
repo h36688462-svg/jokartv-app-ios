@@ -11,6 +11,7 @@ import 'providers/iptv_provider.dart';
 import 'providers/parental_control_provider.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/welcome_screen.dart';
 import 'widgets/tv_global_focus_root.dart';
 
 void main() async {
@@ -106,7 +107,7 @@ class AuthGate extends StatelessWidget {
     if (auth.isLoggedIn) {
       return const DashboardScreen();
     } else {
-      return const LoginScreen();
+      return const WelcomeScreen();
     }
   }
 }

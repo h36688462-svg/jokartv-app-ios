@@ -106,6 +106,8 @@ class AuthGate extends StatelessWidget {
 
     if (auth.isLoggedIn) {
       return const DashboardScreen();
+    } else if (auth.showLogin) {
+      return const LoginScreen();
     } else {
       return const WelcomeScreen();
     }

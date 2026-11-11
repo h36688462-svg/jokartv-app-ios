@@ -5,6 +5,7 @@ import '../services/storage_service.dart';
 class AuthProvider extends ChangeNotifier {
   bool _isLoggedIn = false;
   bool _isLoading = false;
+  bool _showLogin = false;
   String _activeCode = '';
   Map<String, dynamic>? _userInfo;
   String? _errorMessage;
@@ -15,9 +16,15 @@ class AuthProvider extends ChangeNotifier {
 
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
+  bool get showLogin => _showLogin;
   String get activeCode => _activeCode;
   Map<String, dynamic>? get userInfo => _userInfo;
   String? get errorMessage => _errorMessage;
+
+  void setShowLogin(bool val) {
+    _showLogin = val;
+    notifyListeners();
+  }
 
   Future<void> checkSavedLogin() async {
     _isLoading = true;
@@ -63,6 +70,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     _isLoggedIn = false;
+    _showLogin = false;
     _activeCode = '';
     _userInfo = null;
     IptvApiClient.clearCache();

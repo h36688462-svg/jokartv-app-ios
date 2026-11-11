@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../models/iptv_models.dart';
 
@@ -165,13 +167,19 @@ class IptvApiClient {
     final ext = (extension != null && extension.isNotEmpty) ? extension : 'mp4';
     switch (type) {
       case 'live':
-        return '$h/live/$code/$code/$streamId';
+        if (!kIsWeb && Platform.isIOS) {
+          return '$h/live/$code/$code/$streamId.m3u8';
+        }
+        return '$h/live/$code/$code/$streamId.ts';
       case 'movies':
         return '$h/movie/$code/$code/$streamId.$ext';
       case 'series':
         return '$h/series/$code/$code/$streamId.$ext';
       default:
-        return '$h/live/$code/$code/$streamId';
+        if (!kIsWeb && Platform.isIOS) {
+          return '$h/live/$code/$code/$streamId.m3u8';
+        }
+        return '$h/live/$code/$code/$streamId.ts';
     }
   }
 }

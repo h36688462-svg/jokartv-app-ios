@@ -1,18 +1,14 @@
 name: Build and Upload to App Store Connect
 
 on:
+  workflow_dispatch:
   push:
     branches: [ master ]
-  workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   build_and_deploy:
-    runs-on: macos-13
-    timeout-minutes: 20
+    runs-on: macos-latest
+    timeout-minutes: 25
 
     steps:
       - name: Checkout Code
@@ -87,5 +83,4 @@ jobs:
           PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
         run: |
           cd ios
-          bundle install
           bundle exec fastlane beta

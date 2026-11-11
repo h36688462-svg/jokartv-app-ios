@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   build_and_deploy:
-    runs-on: macos-13
+    runs-on: macos-14
     timeout-minutes: 20
 
     steps:

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/storage_service.dart';
+import '../models/iptv_models.dart';
 
 class IosMediaSourceScreen extends StatefulWidget {
   const IosMediaSourceScreen({super.key});
@@ -23,11 +25,22 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
   final TextEditingController _serverPassController = TextEditingController();
 
   bool _obscurePassword = true;
+  List<UserAccount> _savedAccounts = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadSavedAccounts();
+  }
+
+  Future<void> _loadSavedAccounts() async {
+    final accounts = await StorageService.getSavedAccounts();
+    if (mounted) {
+      setState(() {
+        _savedAccounts = accounts;
+      });
+    }
   }
 
   @override
@@ -51,6 +64,12 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
       );
       return;
     }
+    await StorageService.addAccount(UserAccount(
+      name: name.isEmpty ? 'My M3U Playlist' : name,
+      url: url,
+      username: 'm3u',
+      password: 'm3u',
+    ));
     await auth.loginWithM3U(name, url);
   }
 
@@ -66,263 +85,397 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
       );
       return;
     }
+    await StorageService.addAccount(UserAccount(
+      name: name.isEmpty ? 'Media Server' : name,
+      url: url,
+      username: user,
+      password: pass,
+    ));
     await auth.loginWithServer(name, url, user, pass);
+  }
+
+  Future<void> _loadProfile(UserAccount account, AuthProvider auth) async {
+    if (account.username == 'm3u') {
+      _tabController.index = 0;
+      _m3uNameController.text = account.name;
+      _m3uUrlController.text = account.url;
+      await auth.loginWithM3U(account.name, account.url);
+    } else {
+      _tabController.index = 1;
+      _serverNameController.text = account.name;
+      _serverUrlController.text = account.url;
+      _serverUserController.text = account.username;
+      _serverPassController.text = account.password;
+      await auth.loginWithServer(account.name, account.url, account.username, account.password);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
+    final screenSize = MediaQuery.of(context).size;
+    final isLandscape = screenSize.width > screenSize.height;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0B),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF141414),
-        title: const Text(
-          'Jokar TV',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        centerTitle: true,
-      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 580),
-              padding: const EdgeInsets.all(24.0),
+              constraints: const BoxConstraints(maxWidth: 850),
               decoration: BoxDecoration(
                 color: const Color(0xFF141414),
                 borderRadius: BorderRadius.circular(16.0),
                 border: Border.all(color: Colors.white10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    blurRadius: 20,
-                    spreadRadius: 3,
+                    color: Colors.black.withOpacity(0.6),
+                    blurRadius: 25,
+                    spreadRadius: 5,
                   ),
                 ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // App Logo Asset
-                  Image.asset(
-                    'smartiptv_source/app/src/main/res/drawable/app_logo.png',
-                    height: 48,
-                    width: 48,
-                    cacheWidth: 150,
-                    cacheHeight: 150,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.tv_rounded, size: 48, color: Color(0xFFE50914)),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Add Media Source',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Enter your M3U playlist URL or server login details.',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-
-                  // TabBar for Dual Modes
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1F1F1F),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: TabBar(
-                      controller: _tabController,
-                      indicator: BoxDecoration(
-                        color: const Color(0xFF3B82F6),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      labelColor: Colors.white,
-                      unselectedLabelColor: Colors.grey,
-                      tabs: const [
-                        Tab(text: 'M3U Playlist URL'),
-                        Tab(text: 'Server Login'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  if (auth.errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        auth.errorMessage!,
-                        style: const TextStyle(color: Colors.redAccent, fontSize: 12),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-
-                  SizedBox(
-                    height: 220,
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              TextField(
-                                controller: _m3uNameController,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: 'Playlist Name (Optional)',
-                                  labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
-                                  filled: true,
-                                  fillColor: const Color(0xFF1F1F1F),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              TextField(
-                                controller: _m3uUrlController,
-                                keyboardType: TextInputType.url,
-                                textInputAction: TextInputAction.done,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: 'M3U Playlist URL (.m3u / .m3u8)',
-                                  hintText: 'https://example.com/playlist.m3u',
-                                  hintStyle: const TextStyle(color: Colors.white24, fontSize: 12),
-                                  labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
-                                  filled: true,
-                                  fillColor: const Color(0xFF1F1F1F),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                height: 44,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF3B82F6),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  ),
-                                  onPressed: auth.isLoading ? null : () => _handleM3uLogin(auth),
-                                  child: auth.isLoading
-                                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                      : const Text('Connect M3U Playlist', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                                ),
-                              ),
-                            ],
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16.0),
+                child: isLandscape
+                    ? Row(
+                        children: [
+                          // Left Panel: Form & Inputs
+                          Expanded(
+                            flex: 6,
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: _buildFormContent(auth),
+                            ),
                           ),
-                        ),
-                        SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              TextField(
-                                controller: _serverNameController,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: 'Profile Name',
-                                  labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
-                                  filled: true,
-                                  fillColor: const Color(0xFF1F1F1F),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              TextField(
-                                controller: _serverUrlController,
-                                keyboardType: TextInputType.url,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: InputDecoration(
-                                  labelText: 'Server URL (e.g. http://portal.com:8080)',
-                                  labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
-                                  filled: true,
-                                  fillColor: const Color(0xFF1F1F1F),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _serverUserController,
-                                      style: const TextStyle(color: Colors.white),
-                                      decoration: InputDecoration(
-                                        labelText: 'Username',
-                                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
-                                        filled: true,
-                                        fillColor: const Color(0xFF1F1F1F),
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _serverPassController,
-                                      obscureText: _obscurePassword,
-                                      style: const TextStyle(color: Colors.white),
-                                      decoration: InputDecoration(
-                                        labelText: 'Password',
-                                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
-                                        filled: true,
-                                        fillColor: const Color(0xFF1F1F1F),
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                        suffixIcon: IconButton(
-                                          icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey, size: 20),
-                                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 14),
-                              SizedBox(
-                                height: 44,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF3B82F6),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  ),
-                                  onPressed: auth.isLoading ? null : () => _handleServerLogin(auth),
-                                  child: auth.isLoading
-                                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                      : const Text('Login to Server', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                                ),
-                              ),
-                            ],
+                          // Right Panel: Branded Showcase
+                          Expanded(
+                            flex: 4,
+                            child: Container(
+                              color: const Color(0xFF1A1A1A),
+                              padding: const EdgeInsets.all(24.0),
+                              child: _buildBrandedShowcase(),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Version 1.0.0+31',
-                    style: TextStyle(color: Colors.grey, fontSize: 11),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: _buildBrandedShowcase(isCompact: true),
+                          ),
+                          const Divider(height: 1, color: Colors.white10),
+                          Padding(
+                            padding: const EdgeInsets.all(24.0),
+                            child: _buildFormContent(auth),
+                          ),
+                        ],
+                      ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildBrandedShowcase({bool isCompact = false}) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.asset(
+          'smartiptv_source/app/src/main/res/drawable/app_logo.png',
+          height: isCompact ? 48 : 72,
+          width: isCompact ? 48 : 72,
+          cacheWidth: 200,
+          cacheHeight: 200,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.high,
+          errorBuilder: (context, error, stackTrace) => const Icon(Icons.tv_rounded, size: 64, color: Color(0xFFE50914)),
+        ),
+        SizedBox(height: isCompact ? 8 : 16),
+        const Text(
+          'Jokar TV',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Your Personal Media Player',
+          style: TextStyle(color: Colors.grey, fontSize: 13),
+          textAlign: TextAlign.center,
+        ),
+        if (!isCompact) ...[
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF141414),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.security_rounded, color: Color(0xFFE50914), size: 20),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Secure local playback with M3U & Server API support.',
+                    style: TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: 16),
+        const Text(
+          'Version 1.0.0+32',
+          style: TextStyle(color: Colors.grey, fontSize: 11),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormContent(AuthProvider auth) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Enter Login Details',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Quick Saved Profiles Selector (if available)
+        if (_savedAccounts.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1F1F1F),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.white12),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<UserAccount>(
+                dropdownColor: const Color(0xFF1F1F1F),
+                hint: const Text('Quick Select Saved Profile', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                isExpanded: true,
+                items: _savedAccounts.map((acc) {
+                  return DropdownMenuItem<UserAccount>(
+                    value: acc,
+                    child: Text(acc.name, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                  );
+                }).toList(),
+                onChanged: (acc) {
+                  if (acc != null) {
+                    _loadProfile(acc, auth);
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+        ],
+
+        // Mode Switcher TabBar
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1F1F1F),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            indicator: BoxDecoration(
+              color: const Color(0xFFE50914),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.grey,
+            tabs: const [
+              Tab(text: 'M3U URL'),
+              Tab(text: 'Server Login'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        if (auth.errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              auth.errorMessage!,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+        SizedBox(
+          height: 200,
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              // Mode 1: M3U URL
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _m3uNameController,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      decoration: InputDecoration(
+                        labelText: 'Playlist Name',
+                        prefixIcon: const Icon(Icons.bookmark_outline, color: Colors.grey, size: 20),
+                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+                        filled: true,
+                        fillColor: const Color(0xFF1F1F1F),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _m3uUrlController,
+                      keyboardType: TextInputType.url,
+                      textInputAction: TextInputAction.done,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      decoration: InputDecoration(
+                        labelText: 'M3U Playlist URL',
+                        hintText: 'https://example.com/playlist.m3u',
+                        hintStyle: const TextStyle(color: Colors.white24, fontSize: 11),
+                        prefixIcon: const Icon(Icons.link_rounded, color: Colors.grey, size: 20),
+                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+                        filled: true,
+                        fillColor: const Color(0xFF1F1F1F),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 44,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE50914),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: auth.isLoading ? null : () => _handleM3uLogin(auth),
+                        child: auth.isLoading
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Text('Connect M3U Playlist', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Mode 2: Server Login
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _serverNameController,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      decoration: InputDecoration(
+                        labelText: 'Profile Name',
+                        prefixIcon: const Icon(Icons.person_outline, color: Colors.grey, size: 20),
+                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+                        filled: true,
+                        fillColor: const Color(0xFF1F1F1F),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _serverUrlController,
+                      keyboardType: TextInputType.url,
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      decoration: InputDecoration(
+                        labelText: 'Server URL (http://portal.com:8080)',
+                        prefixIcon: const Icon(Icons.dns_outlined, color: Colors.grey, size: 20),
+                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+                        filled: true,
+                        fillColor: const Color(0xFF1F1F1F),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _serverUserController,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: InputDecoration(
+                              labelText: 'Username',
+                              prefixIcon: const Icon(Icons.badge_outlined, color: Colors.grey, size: 18),
+                              labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+                              filled: true,
+                              fillColor: const Color(0xFF1F1F1F),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _serverPassController,
+                            obscureText: _obscurePassword,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey, size: 18),
+                              labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+                              filled: true,
+                              fillColor: const Color(0xFF1F1F1F),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              suffixIcon: IconButton(
+                                icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey, size: 18),
+                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 44,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE50914),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: auth.isLoading ? null : () => _handleServerLogin(auth),
+                        child: auth.isLoading
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Text('Login to Server', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

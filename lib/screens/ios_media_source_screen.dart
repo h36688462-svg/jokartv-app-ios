@@ -11,8 +11,8 @@ class IosMediaSourceScreen extends StatefulWidget {
   State<IosMediaSourceScreen> createState() => _IosMediaSourceScreenState();
 }
 
-class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> {
+  int _selectedMode = 0; // 0 for M3U URL, 1 for Server Login
 
   // Mode 1: M3U
   final TextEditingController _m3uNameController = TextEditingController(text: 'My M3U Playlist');
@@ -30,7 +30,6 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _loadSavedAccounts();
   }
 
@@ -45,7 +44,6 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
 
   @override
   void dispose() {
-    _tabController.dispose();
     _m3uNameController.dispose();
     _m3uUrlController.dispose();
     _serverNameController.dispose();
@@ -96,12 +94,12 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
 
   Future<void> _loadProfile(UserAccount account, AuthProvider auth) async {
     if (account.username == 'm3u') {
-      _tabController.index = 0;
+      setState(() => _selectedMode = 0);
       _m3uNameController.text = account.name;
       _m3uUrlController.text = account.url;
       await auth.loginWithM3U(account.name, account.url);
     } else {
-      _tabController.index = 1;
+      setState(() => _selectedMode = 1);
       _serverNameController.text = account.name;
       _serverUrlController.text = account.url;
       _serverUserController.text = account.username;
@@ -123,7 +121,7 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 850),
+              constraints: const BoxConstraints(maxWidth: 820),
               decoration: BoxDecoration(
                 color: const Color(0xFF141414),
                 borderRadius: BorderRadius.circular(16.0),
@@ -200,45 +198,10 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
           'Jokar TV',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 22,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.2,
           ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Your Personal Media Player',
-          style: TextStyle(color: Colors.grey, fontSize: 13),
-          textAlign: TextAlign.center,
-        ),
-        if (!isCompact) ...[
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF141414),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white10),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.security_rounded, color: Color(0xFFE50914), size: 20),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Secure local playback with M3U & Server API support.',
-                    style: TextStyle(color: Colors.white70, fontSize: 11),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-        const SizedBox(height: 16),
-        const Text(
-          'Version 1.0.0+32',
-          style: TextStyle(color: Colors.grey, fontSize: 11),
           textAlign: TextAlign.center,
         ),
       ],
@@ -291,25 +254,49 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
           const SizedBox(height: 14),
         ],
 
-        // Mode Switcher TabBar
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1F1F1F),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: TabBar(
-            controller: _tabController,
-            indicator: BoxDecoration(
-              color: const Color(0xFFE50914),
-              borderRadius: BorderRadius.circular(10),
+        // Clean Full-Width Equal-Width Mode Buttons
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: () => setState(() => _selectedMode = 0),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _selectedMode == 0 ? const Color(0xFFE50914) : const Color(0xFF1F1F1F),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _selectedMode == 0 ? const Color(0xFFE50914) : Colors.white12),
+                  ),
+                  child: const Text(
+                    'M3U URL',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                ),
+              ),
             ),
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.grey,
-            tabs: const [
-              Tab(text: 'M3U URL'),
-              Tab(text: 'Server Login'),
-            ],
-          ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: InkWell(
+                onTap: () => setState(() => _selectedMode = 1),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _selectedMode == 1 ? const Color(0xFFE50914) : const Color(0xFF1F1F1F),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _selectedMode == 1 ? const Color(0xFFE50914) : Colors.white12),
+                  ),
+                  child: const Text(
+                    'Server Login',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 14),
 
@@ -323,158 +310,138 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
             ),
           ),
 
-        SizedBox(
-          height: 200,
-          child: TabBarView(
-            controller: _tabController,
+        // Mode Form Fields
+        if (_selectedMode == 0) ...[
+          TextField(
+            controller: _m3uNameController,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+            decoration: InputDecoration(
+              labelText: 'Playlist Name',
+              prefixIcon: const Icon(Icons.bookmark_outline, color: Colors.grey, size: 20),
+              labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+              filled: true,
+              fillColor: const Color(0xFF1F1F1F),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _m3uUrlController,
+            keyboardType: TextInputType.url,
+            textInputAction: TextInputAction.done,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+            decoration: InputDecoration(
+              labelText: 'M3U Playlist URL',
+              hintText: 'https://example.com/playlist.m3u',
+              hintStyle: const TextStyle(color: Colors.white24, fontSize: 11),
+              prefixIcon: const Icon(Icons.link_rounded, color: Colors.grey, size: 20),
+              labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+              filled: true,
+              fillColor: const Color(0xFF1F1F1F),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 44,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE50914),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: auth.isLoading ? null : () => _handleM3uLogin(auth),
+              child: auth.isLoading
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Connect M3U Playlist', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            ),
+          ),
+        ] else ...[
+          TextField(
+            controller: _serverNameController,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+            decoration: InputDecoration(
+              labelText: 'Profile Name',
+              prefixIcon: const Icon(Icons.person_outline, color: Colors.grey, size: 20),
+              labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+              filled: true,
+              fillColor: const Color(0xFF1F1F1F),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _serverUrlController,
+            keyboardType: TextInputType.url,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+            decoration: InputDecoration(
+              labelText: 'Server URL (http://portal.com:8080)',
+              prefixIcon: const Icon(Icons.dns_outlined, color: Colors.grey, size: 20),
+              labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+              filled: true,
+              fillColor: const Color(0xFF1F1F1F),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
             children: [
-              // Mode 1: M3U URL
-              SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      controller: _m3uNameController,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                      decoration: InputDecoration(
-                        labelText: 'Playlist Name',
-                        prefixIcon: const Icon(Icons.bookmark_outline, color: Colors.grey, size: 20),
-                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
-                        filled: true,
-                        fillColor: const Color(0xFF1F1F1F),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _m3uUrlController,
-                      keyboardType: TextInputType.url,
-                      textInputAction: TextInputAction.done,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                      decoration: InputDecoration(
-                        labelText: 'M3U Playlist URL',
-                        hintText: 'https://example.com/playlist.m3u',
-                        hintStyle: const TextStyle(color: Colors.white24, fontSize: 11),
-                        prefixIcon: const Icon(Icons.link_rounded, color: Colors.grey, size: 20),
-                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
-                        filled: true,
-                        fillColor: const Color(0xFF1F1F1F),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 44,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE50914),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        onPressed: auth.isLoading ? null : () => _handleM3uLogin(auth),
-                        child: auth.isLoading
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : const Text('Connect M3U Playlist', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                      ),
-                    ),
-                  ],
+              Expanded(
+                child: TextField(
+                  controller: _serverUserController,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    prefixIcon: const Icon(Icons.badge_outlined, color: Colors.grey, size: 18),
+                    labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+                    filled: true,
+                    fillColor: const Color(0xFF1F1F1F),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
                 ),
               ),
-              // Mode 2: Server Login
-              SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      controller: _serverNameController,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                      decoration: InputDecoration(
-                        labelText: 'Profile Name',
-                        prefixIcon: const Icon(Icons.person_outline, color: Colors.grey, size: 20),
-                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
-                        filled: true,
-                        fillColor: const Color(0xFF1F1F1F),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _serverPassController,
+                  obscureText: _obscurePassword,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey, size: 18),
+                    labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+                    filled: true,
+                    fillColor: const Color(0xFF1F1F1F),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey, size: 18),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                     ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _serverUrlController,
-                      keyboardType: TextInputType.url,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                      decoration: InputDecoration(
-                        labelText: 'Server URL (http://portal.com:8080)',
-                        prefixIcon: const Icon(Icons.dns_outlined, color: Colors.grey, size: 20),
-                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
-                        filled: true,
-                        fillColor: const Color(0xFF1F1F1F),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _serverUserController,
-                            style: const TextStyle(color: Colors.white, fontSize: 13),
-                            decoration: InputDecoration(
-                              labelText: 'Username',
-                              prefixIcon: const Icon(Icons.badge_outlined, color: Colors.grey, size: 18),
-                              labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
-                              filled: true,
-                              fillColor: const Color(0xFF1F1F1F),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextField(
-                            controller: _serverPassController,
-                            obscureText: _obscurePassword,
-                            style: const TextStyle(color: Colors.white, fontSize: 13),
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey, size: 18),
-                              labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
-                              filled: true,
-                              fillColor: const Color(0xFF1F1F1F),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              suffixIcon: IconButton(
-                                icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey, size: 18),
-                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      height: 44,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE50914),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        onPressed: auth.isLoading ? null : () => _handleServerLogin(auth),
-                        child: auth.isLoading
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : const Text('Login to Server', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 44,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE50914),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: auth.isLoading ? null : () => _handleServerLogin(auth),
+              child: auth.isLoading
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Login to Server', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            ),
+          ),
+        ],
       ],
     );
   }

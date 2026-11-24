@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../models/iptv_models.dart';
-import '../providers/auth_provider.dart';
 import '../providers/iptv_provider.dart';
 import '../widgets/tv_focus_wrapper.dart';
 import 'player_screen.dart';
@@ -20,22 +19,9 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
   String _selectedCategoryId = '';
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
-  final FocusNode _searchFocusNode = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final auth = Provider.of<AuthProvider>(context, listen: false);
-      final iptv = Provider.of<IptvProvider>(context, listen: false);
-      iptv.setTab('live', auth.activeCode);
-    });
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
-    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -121,45 +107,27 @@ class _LiveTvScreenState extends State<LiveTvScreen> {
               policy: ReadingOrderTraversalPolicy(),
               child: Column(
                 children: [
-                  // Search Bar with TV Remote Focus handling
+                  // Search Bar
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Focus(
-                      focusNode: _searchFocusNode,
-                      onKeyEvent: (node, event) {
-                        if (event is KeyDownEvent) {
-                          if (event.logicalKey == LogicalKeyboardKey.escape ||
-                              event.logicalKey == LogicalKeyboardKey.goBack) {
-                            node.unfocus();
-                            return KeyEventResult.handled;
-                          }
-                          if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
-                              event.logicalKey == LogicalKeyboardKey.arrowUp) {
-                            node.unfocus();
-                            return KeyEventResult.handled;
-                          }
-                        }
-                        return KeyEventResult.ignored;
+                    child: TextField(
+                      controller: _searchController,
+                      onTap: () {
+                        SystemChannels.textInput.invokeMethod('TextInput.show');
                       },
-                      child: TextField(
-                        controller: _searchController,
-                        onTap: () {
-                          SystemChannels.textInput.invokeMethod('TextInput.show');
-                        },
-                        onChanged: (val) {
-                          setState(() {
-                            _searchQuery = val;
-                          });
-                        },
-                        style: const TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          hintText: 'Search channel name (e.g. BEIN Sports, MBC 1)...',
-                          hintStyle: const TextStyle(color: Colors.grey),
-                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                          filled: true,
-                          fillColor: const Color(0xFF1E293B),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                        ),
+                      onChanged: (val) {
+                        setState(() {
+                          _searchQuery = val;
+                        });
+                      },
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Search channel name (e.g. BEIN Sports, MBC 1)...',
+                        hintStyle: const TextStyle(color: Colors.grey),
+                        prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                        filled: true,
+                        fillColor: const Color(0xFF1E293B),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                       ),
                     ),
                   ),

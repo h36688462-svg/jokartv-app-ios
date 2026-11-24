@@ -313,7 +313,7 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
 
                   const SizedBox(height: 12),
                   const Text(
-                    'Version 1.0.0+30',
+                    'Version 1.0.0+31',
                     style: TextStyle(color: Colors.grey, fontSize: 11),
                     textAlign: TextAlign.center,
                   ),

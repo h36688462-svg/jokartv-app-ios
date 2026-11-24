@@ -152,7 +152,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
       _controller = VideoPlayerController.networkUrl(
         Uri.parse(url),
-        httpHeaders: (!kIsWeb && Platform.isIOS) ? const {} : const {
+        httpHeaders: const {
           'User-Agent': 'VLC/3.0.16 LibVLC/3.0.16',
           'Accept': '*/*',
         },

@@ -86,27 +86,6 @@ class AuthProvider extends ChangeNotifier {
 
 
 
-  Future<bool> loginWithSampleStream() async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    const sampleUrl = 'https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8';
-    await StorageService.saveMediaSource(
-      type: 'sample',
-      name: 'Apple Sample Stream',
-      url: sampleUrl,
-      username: 'sample',
-      password: 'sample',
-    );
-
-    _sourceInfo = await StorageService.getMediaSource();
-    _isLoggedIn = true;
-    _isLoading = false;
-    notifyListeners();
-    return true;
-  }
-
   Future<void> logout() async {
     _isLoggedIn = false;
     _sourceInfo = null;

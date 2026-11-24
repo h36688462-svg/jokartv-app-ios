@@ -69,10 +69,6 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
     await auth.loginWithServer(name, url, user, pass);
   }
 
-  Future<void> _handleSampleStream(AuthProvider auth) async {
-    await auth.loginWithSampleStream();
-  }
-
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
@@ -82,7 +78,7 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
       appBar: AppBar(
         backgroundColor: const Color(0xFF141414),
         title: const Text(
-          'Jokar TV - Personal Media Player (BYOC)',
+          'Jokar TV',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
@@ -90,91 +86,53 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 600),
-              padding: const EdgeInsets.all(32.0),
+              constraints: const BoxConstraints(maxWidth: 580),
+              padding: const EdgeInsets.all(24.0),
               decoration: BoxDecoration(
                 color: const Color(0xFF141414),
                 borderRadius: BorderRadius.circular(16.0),
                 border: Border.all(color: Colors.white10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.6),
-                    blurRadius: 25,
-                    spreadRadius: 5,
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 20,
+                    spreadRadius: 3,
                   ),
                 ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.tv_rounded, size: 56, color: Color(0xFFE50914)),
-                  const SizedBox(height: 16),
+                  // App Logo Asset
+                  Image.asset(
+                    'smartiptv_source/app/src/main/res/drawable/app_logo.png',
+                    height: 48,
+                    width: 48,
+                    cacheWidth: 150,
+                    cacheHeight: 150,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.tv_rounded, size: 48, color: Color(0xFFE50914)),
+                  ),
+                  const SizedBox(height: 12),
                   const Text(
-                    'Bring Your Own Content (BYOC)',
+                    'Add Media Source',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   const Text(
-                    'Add your personal M3U Playlist or Server API credentials to start streaming.',
-                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                    'Enter your M3U playlist URL or server login details.',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 24),
-
-                  // Prominent Test Sample Stream Button (Guideline 2.5.19 friendly)
-                  Container(
-                    width: double.infinity,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFE50914), Color(0xFFB80710)],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: auth.isLoading ? null : () => _handleSampleStream(auth),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.play_circle_fill_rounded, color: Colors.white, size: 24),
-                          SizedBox(width: 10),
-                          Text(
-                            'Test Sample Stream',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-                  const Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.white24)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('OR CONFIGURE SOURCE', style: TextStyle(color: Colors.grey, fontSize: 12, letterSpacing: 1.5)),
-                      ),
-                      Expanded(child: Divider(color: Colors.white24)),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // TabBar for Dual Modes
                   Container(
@@ -196,20 +154,20 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
                   if (auth.errorMessage != null)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
                         auth.errorMessage!,
-                        style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                        style: const TextStyle(color: Colors.redAccent, fontSize: 12),
                         textAlign: TextAlign.center,
                       ),
                     ),
 
                   SizedBox(
-                    height: 260,
+                    height: 220,
                     child: TabBarView(
                       controller: _tabController,
                       children: [
@@ -222,13 +180,14 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
                                   labelText: 'Playlist Name (Optional)',
-                                  labelStyle: const TextStyle(color: Colors.grey),
+                                  labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
                                   filled: true,
                                   fillColor: const Color(0xFF1F1F1F),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 ),
                               ),
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 12),
                               TextField(
                                 controller: _m3uUrlController,
                                 keyboardType: TextInputType.url,
@@ -237,16 +196,17 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                 decoration: InputDecoration(
                                   labelText: 'M3U Playlist URL (.m3u / .m3u8)',
                                   hintText: 'https://example.com/playlist.m3u',
-                                  hintStyle: const TextStyle(color: Colors.white24),
-                                  labelStyle: const TextStyle(color: Colors.grey),
+                                  hintStyle: const TextStyle(color: Colors.white24, fontSize: 12),
+                                  labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
                                   filled: true,
                                   fillColor: const Color(0xFF1F1F1F),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 ),
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 16),
                               SizedBox(
-                                height: 48,
+                                height: 44,
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF3B82F6),
@@ -254,8 +214,8 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                   ),
                                   onPressed: auth.isLoading ? null : () => _handleM3uLogin(auth),
                                   child: auth.isLoading
-                                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                      : const Text('Connect M3U Playlist', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                      : const Text('Connect M3U Playlist', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                                 ),
                               ),
                             ],
@@ -270,10 +230,11 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
                                   labelText: 'Profile Name',
-                                  labelStyle: const TextStyle(color: Colors.grey),
+                                  labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
                                   filled: true,
                                   fillColor: const Color(0xFF1F1F1F),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 ),
                               ),
                               const SizedBox(height: 10),
@@ -283,10 +244,11 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
                                   labelText: 'Server URL (e.g. http://portal.com:8080)',
-                                  labelStyle: const TextStyle(color: Colors.grey),
+                                  labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
                                   filled: true,
                                   fillColor: const Color(0xFF1F1F1F),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 ),
                               ),
                               const SizedBox(height: 10),
@@ -298,10 +260,11 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                       style: const TextStyle(color: Colors.white),
                                       decoration: InputDecoration(
                                         labelText: 'Username',
-                                        labelStyle: const TextStyle(color: Colors.grey),
+                                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
                                         filled: true,
                                         fillColor: const Color(0xFF1F1F1F),
                                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                       ),
                                     ),
                                   ),
@@ -313,12 +276,13 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                       style: const TextStyle(color: Colors.white),
                                       decoration: InputDecoration(
                                         labelText: 'Password',
-                                        labelStyle: const TextStyle(color: Colors.grey),
+                                        labelStyle: const TextStyle(color: Colors.grey, fontSize: 13),
                                         filled: true,
                                         fillColor: const Color(0xFF1F1F1F),
                                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                         suffixIcon: IconButton(
-                                          icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey),
+                                          icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off, color: Colors.grey, size: 20),
                                           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                                         ),
                                       ),
@@ -326,9 +290,9 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 14),
                               SizedBox(
-                                height: 48,
+                                height: 44,
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF3B82F6),
@@ -336,8 +300,8 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                   ),
                                   onPressed: auth.isLoading ? null : () => _handleServerLogin(auth),
                                   child: auth.isLoading
-                                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                      : const Text('Login to Server', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                      : const Text('Login to Server', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                                 ),
                               ),
                             ],
@@ -347,9 +311,9 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   const Text(
-                    'Version 1.0.0+30 • 100% Compliant Personal Media Player',
+                    'Version 1.0.0+30',
                     style: TextStyle(color: Colors.grey, fontSize: 11),
                     textAlign: TextAlign.center,
                   ),

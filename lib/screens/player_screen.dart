@@ -124,12 +124,22 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Future<void> _initPlayer() async {
     _disposeCurrentPlayer();
     final auth = Provider.of<AuthProvider>(context, listen: false);
-    final url = IptvApiClient.getStreamUrl(
-      auth.activeCode,
-      widget.streamType,
-      _currentStreamId,
-      extension: _currentExtension,
-    );
+    final source = auth.sourceInfo;
+    final host = source?['url'];
+    final username = source?['username'];
+
+    String url;
+    if (_currentStreamId.startsWith('http://') || _currentStreamId.startsWith('https://')) {
+      url = _currentStreamId;
+    } else {
+      url = IptvApiClient.getStreamUrl(
+        (username != null && username.isNotEmpty) ? username : auth.activeCode,
+        widget.streamType,
+        _currentStreamId,
+        extension: _currentExtension,
+        host: (host != null && host.isNotEmpty) ? host : null,
+      );
+    }
 
     try {
       if (!kIsWeb && Platform.isWindows) {

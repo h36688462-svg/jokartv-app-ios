@@ -3,13 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:media_kit/media_kit.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 
 import 'providers/auth_provider.dart';
 import 'providers/iptv_provider.dart';
 import 'providers/parental_control_provider.dart';
 import 'widgets/tv_navigation_engine.dart';
 import 'screens/ios_media_source_screen.dart';
+import 'screens/dashboard_screen.dart';
 import 'tv/tv_home_screen.dart';
 
 void main() async {
@@ -22,10 +23,12 @@ void main() async {
 
   try {
     await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   } catch (_) {}
 
   runApp(const StandaloneTVApp());
@@ -98,7 +101,17 @@ class TVAuthGateScreen extends StatelessWidget {
     }
 
     if (auth.isLoggedIn) {
-      return const TVHomeScreen();
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+          final isMobilePlatform = defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android;
+          if (isPortrait || isMobilePlatform || constraints.maxWidth < 1100) {
+            return const DashboardScreen();
+          } else {
+            return const TVHomeScreen();
+          }
+        },
+      );
     } else {
       return const IosMediaSourceScreen();
     }

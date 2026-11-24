@@ -22,6 +22,10 @@ class StorageService {
     required String url,
     String? username,
     String? password,
+    String? expDate,
+    String? maxConnections,
+    String? activeCons,
+    String? status,
   }) async {
     final p = await prefs;
     await p.setString('source_type', type);
@@ -29,6 +33,10 @@ class StorageService {
     await p.setString('source_url', url);
     await p.setString('source_username', username ?? '');
     await p.setString('source_password', password ?? '');
+    await p.setString('source_exp_date', expDate ?? '');
+    await p.setString('source_max_connections', maxConnections ?? '');
+    await p.setString('source_active_cons', activeCons ?? '');
+    await p.setString('source_status', status ?? '');
   }
 
   static Future<Map<String, String>?> getMediaSource() async {
@@ -44,6 +52,10 @@ class StorageService {
       'url': url ?? '',
       'username': p.getString('source_username') ?? '',
       'password': p.getString('source_password') ?? '',
+      'exp_date': p.getString('source_exp_date') ?? '',
+      'max_connections': p.getString('source_max_connections') ?? '1',
+      'active_cons': p.getString('source_active_cons') ?? '1',
+      'status': p.getString('source_status') ?? 'Active',
     };
   }
 
@@ -54,6 +66,10 @@ class StorageService {
     await p.remove('source_url');
     await p.remove('source_username');
     await p.remove('source_password');
+    await p.remove('source_exp_date');
+    await p.remove('source_max_connections');
+    await p.remove('source_active_cons');
+    await p.remove('source_status');
   }
 
   // Favorites

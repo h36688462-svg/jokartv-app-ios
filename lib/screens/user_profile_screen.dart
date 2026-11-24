@@ -5,6 +5,21 @@ import '../providers/auth_provider.dart';
 class UserProfileScreen extends StatelessWidget {
   const UserProfileScreen({super.key});
 
+  String _formatExpDate(dynamic rawExp) {
+    if (rawExp == null || rawExp.toString().isEmpty) return 'Unlimited';
+    final str = rawExp.toString().trim();
+    if (str.toLowerCase() == 'unlimited' || str.toLowerCase() == 'lifetime') return 'Unlimited';
+    final intVal = int.tryParse(str);
+    if (intVal != null && intVal > 0) {
+      final ms = intVal < 10000000000 ? intVal * 1000 : intVal;
+      try {
+        final dt = DateTime.fromMillisecondsSinceEpoch(ms);
+        return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+      } catch (_) {}
+    }
+    return str;
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
@@ -12,11 +27,9 @@ class UserProfileScreen extends StatelessWidget {
 
     final username = (userInfo['username'] ?? auth.activeCode).toString();
     final status = (userInfo['status'] ?? 'Active').toString();
-    final expDate = userInfo['exp_date'] != null
-        ? DateTime.fromMillisecondsSinceEpoch((int.tryParse(userInfo['exp_date'].toString()) ?? 0) * 1000).toIso8601String().split('T').first
-        : 'Unlimited';
+    final expDate = _formatExpDate(userInfo['exp_date']);
     final maxConn = (userInfo['max_connections'] ?? '1').toString();
-    final activeConn = (userInfo['active_cons'] ?? '0').toString();
+    final activeConn = (userInfo['active_cons'] ?? '1').toString();
 
     return Scaffold(
       backgroundColor: const Color(0xFF0B0B0B),

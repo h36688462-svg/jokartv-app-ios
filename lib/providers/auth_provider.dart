@@ -19,7 +19,11 @@ class AuthProvider extends ChangeNotifier {
   Map<String, String>? get sourceInfo => _sourceInfo;
   String get activeCode => _sourceInfo?['username'] ?? _sourceInfo?['url'] ?? '';
   Map<String, dynamic>? get userInfo => {
-        'username': _sourceInfo?['name'] ?? 'Personal Media Source',
+        'username': _sourceInfo?['username'] ?? _sourceInfo?['name'] ?? 'Personal Media Source',
+        'status': _sourceInfo?['status'] ?? 'Active',
+        'exp_date': _sourceInfo?['exp_date'] ?? 'Unlimited',
+        'max_connections': _sourceInfo?['max_connections'] ?? '1',
+        'active_cons': _sourceInfo?['active_cons'] ?? '1',
         'auth': 1,
       };
   String? get errorMessage => _errorMessage;
@@ -68,6 +72,10 @@ class AuthProvider extends ChangeNotifier {
       type: 'm3u',
       name: name.trim().isEmpty ? 'My M3U Playlist' : name.trim(),
       url: cleanUrl,
+      expDate: 'Unlimited',
+      maxConnections: '1',
+      activeCons: '1',
+      status: 'Active',
     );
 
     _sourceInfo = await StorageService.getMediaSource();
@@ -91,6 +99,11 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    String? expDateStr;
+    String? maxConnStr;
+    String? activeConnStr;
+    String? statusStr;
+
     try {
       final apiUri = Uri.parse('$cleanHost/player_api.php?username=$cleanUser&password=$cleanPass');
       final response = await http.get(apiUri).timeout(const Duration(seconds: 10));
@@ -98,11 +111,17 @@ class AuthProvider extends ChangeNotifier {
         final decoded = json.decode(response.body);
         if (decoded is Map<String, dynamic>) {
           final userInfo = decoded['user_info'];
-          if (userInfo is Map<String, dynamic> && userInfo['auth'] == 0) {
-            _errorMessage = 'Server authentication failed (Invalid credentials)';
-            _isLoading = false;
-            notifyListeners();
-            return false;
+          if (userInfo is Map<String, dynamic>) {
+            if (userInfo['auth'] == 0) {
+              _errorMessage = 'Server authentication failed (Invalid credentials)';
+              _isLoading = false;
+              notifyListeners();
+              return false;
+            }
+            expDateStr = userInfo['exp_date']?.toString();
+            maxConnStr = userInfo['max_connections']?.toString();
+            activeConnStr = userInfo['active_cons']?.toString();
+            statusStr = userInfo['status']?.toString();
           }
         } else {
           _errorMessage = 'Invalid server response';
@@ -129,6 +148,10 @@ class AuthProvider extends ChangeNotifier {
       url: cleanHost,
       username: cleanUser,
       password: cleanPass,
+      expDate: expDateStr,
+      maxConnections: maxConnStr,
+      activeCons: activeConnStr,
+      status: statusStr,
     );
 
     _sourceInfo = await StorageService.getMediaSource();

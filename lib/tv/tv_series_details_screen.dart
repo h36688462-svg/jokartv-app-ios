@@ -40,7 +40,7 @@ class _TVSeriesDetailsScreenState extends State<TVSeriesDetailsScreen> {
   Future<void> _loadData() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
 
-    // Fetch Xtream Series Info & TMDB Metadata in parallel
+    // Fetch Series Info & TMDB Metadata in parallel
     final results = await Future.wait([
       IptvApiClient.getSeriesInfo(auth.activeCode, widget.seriesId),
       TmdbService.fetchMetadata(widget.seriesName, 'series'),

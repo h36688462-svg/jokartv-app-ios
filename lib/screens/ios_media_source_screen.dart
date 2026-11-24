@@ -16,11 +16,11 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
   final TextEditingController _m3uNameController = TextEditingController(text: 'My M3U Playlist');
   final TextEditingController _m3uUrlController = TextEditingController();
 
-  // Mode 2: Xtream
-  final TextEditingController _xtreamNameController = TextEditingController(text: 'Xtream Server');
-  final TextEditingController _xtreamUrlController = TextEditingController();
-  final TextEditingController _xtreamUserController = TextEditingController();
-  final TextEditingController _xtreamPassController = TextEditingController();
+  // Mode 2: Server Login
+  final TextEditingController _serverNameController = TextEditingController(text: 'Media Server');
+  final TextEditingController _serverUrlController = TextEditingController();
+  final TextEditingController _serverUserController = TextEditingController();
+  final TextEditingController _serverPassController = TextEditingController();
 
   bool _obscurePassword = true;
 
@@ -35,10 +35,10 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
     _tabController.dispose();
     _m3uNameController.dispose();
     _m3uUrlController.dispose();
-    _xtreamNameController.dispose();
-    _xtreamUrlController.dispose();
-    _xtreamUserController.dispose();
-    _xtreamPassController.dispose();
+    _serverNameController.dispose();
+    _serverUrlController.dispose();
+    _serverUserController.dispose();
+    _serverPassController.dispose();
     super.dispose();
   }
 
@@ -54,11 +54,11 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
     await auth.loginWithM3U(name, url);
   }
 
-  Future<void> _handleXtreamLogin(AuthProvider auth) async {
-    final name = _xtreamNameController.text.trim();
-    final url = _xtreamUrlController.text.trim();
-    final user = _xtreamUserController.text.trim();
-    final pass = _xtreamPassController.text.trim();
+  Future<void> _handleServerLogin(AuthProvider auth) async {
+    final name = _serverNameController.text.trim();
+    final url = _serverUrlController.text.trim();
+    final user = _serverUserController.text.trim();
+    final pass = _serverPassController.text.trim();
 
     if (url.isEmpty || user.isEmpty || pass.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -66,7 +66,7 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
       );
       return;
     }
-    await auth.loginWithXtream(name, url, user, pass);
+    await auth.loginWithServer(name, url, user, pass);
   }
 
   Future<void> _handleSampleStream(AuthProvider auth) async {
@@ -122,7 +122,7 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Add your personal M3U Playlist or Xtream API credentials to start streaming.',
+                    'Add your personal M3U Playlist or Server API credentials to start streaming.',
                     style: TextStyle(color: Colors.grey, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
@@ -192,7 +192,7 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                       unselectedLabelColor: Colors.grey,
                       tabs: const [
                         Tab(text: 'M3U Playlist URL'),
-                        Tab(text: 'Xtream API Server'),
+                        Tab(text: 'Server Login'),
                       ],
                     ),
                   ),
@@ -266,7 +266,7 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               TextField(
-                                controller: _xtreamNameController,
+                                controller: _serverNameController,
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
                                   labelText: 'Profile Name',
@@ -278,7 +278,7 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                               ),
                               const SizedBox(height: 10),
                               TextField(
-                                controller: _xtreamUrlController,
+                                controller: _serverUrlController,
                                 keyboardType: TextInputType.url,
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
@@ -294,7 +294,7 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                 children: [
                                   Expanded(
                                     child: TextField(
-                                      controller: _xtreamUserController,
+                                      controller: _serverUserController,
                                       style: const TextStyle(color: Colors.white),
                                       decoration: InputDecoration(
                                         labelText: 'Username',
@@ -308,7 +308,7 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: TextField(
-                                      controller: _xtreamPassController,
+                                      controller: _serverPassController,
                                       obscureText: _obscurePassword,
                                       style: const TextStyle(color: Colors.white),
                                       decoration: InputDecoration(
@@ -334,10 +334,10 @@ class _IosMediaSourceScreenState extends State<IosMediaSourceScreen> with Single
                                     backgroundColor: const Color(0xFF3B82F6),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
-                                  onPressed: auth.isLoading ? null : () => _handleXtreamLogin(auth),
+                                  onPressed: auth.isLoading ? null : () => _handleServerLogin(auth),
                                   child: auth.isLoading
                                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                      : const Text('Login to Xtream Server', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                      : const Text('Login to Server', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                                 ),
                               ),
                             ],

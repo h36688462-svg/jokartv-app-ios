@@ -53,7 +53,8 @@ class _TVContentGridScreenState extends State<TVContentGridScreen> {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       _activeCode = auth.activeCode;
       if (_activeCode.isEmpty) {
-        _activeCode = await StorageService.getActivationCode() ?? '';
+        final source = await StorageService.getMediaSource();
+        _activeCode = source?['url'] ?? '';
       }
       await _loadCategoriesAndStreams();
       if (!mounted) return;

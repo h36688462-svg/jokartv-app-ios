@@ -59,9 +59,9 @@ class AuthProvider extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> loginWithXtream(String name, String serverUrl, String username, String password) async {
+  Future<bool> loginWithServer(String name, String serverUrl, String username, String password) async {
     if (serverUrl.trim().isEmpty || username.trim().isEmpty || password.trim().isEmpty) {
-      _errorMessage = 'Please fill in all Xtream server fields';
+      _errorMessage = 'Please fill in all server login fields';
       notifyListeners();
       return false;
     }
@@ -70,8 +70,8 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     await StorageService.saveMediaSource(
-      type: 'xtream',
-      name: name.trim().isEmpty ? 'Xtream Server' : name.trim(),
+      type: 'server',
+      name: name.trim().isEmpty ? 'Media Server' : name.trim(),
       url: serverUrl.trim(),
       username: username.trim(),
       password: password.trim(),
@@ -83,6 +83,8 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     return true;
   }
+
+
 
   Future<bool> loginWithSampleStream() async {
     _isLoading = true;

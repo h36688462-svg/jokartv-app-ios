@@ -10,7 +10,7 @@ class PlaylistManagementScreen extends StatefulWidget {
 class _PlaylistManagementScreenState extends State<PlaylistManagementScreen> {
   final TextEditingController _serverController = TextEditingController(text: 'http://169.58.114.30:8080');
   final TextEditingController _portController = TextEditingController(text: '8080');
-  final TextEditingController _tokenController = TextEditingController(text: 'Xtreme_Access_Token_998877');
+  final TextEditingController _tokenController = TextEditingController(text: 'Access_Token_998877');
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class _PlaylistManagementScreenState extends State<PlaylistManagementScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Configure your Xtream Codes API server, port, and security token.',
+                  'Configure your personal media server and API access token.',
                   style: TextStyle(color: Colors.grey, fontSize: 13),
                 ),
                 const SizedBox(height: 24),

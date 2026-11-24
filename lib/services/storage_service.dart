@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/iptv_models.dart';
 
 class StorageService {
-  static const String keyActivationCode = 'activation_code';
   static const String keyFavorites = 'favorites_list';
   static const String keyAccounts = 'saved_accounts';
   static const String keyPin = 'parental_pin';
@@ -14,27 +13,6 @@ class StorageService {
   static Future<SharedPreferences> get prefs async {
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!;
-  }
-
-  // Compatibility Wrappers for Activation Code
-  static Future<String?> getActivationCode() async {
-    final p = await prefs;
-    final source = await getMediaSource();
-    return source?['url'] ?? p.getString(keyActivationCode) ?? '';
-  }
-
-  static Future<void> saveActivationCode(String code) async {
-    await saveMediaSource(
-      type: 'm3u',
-      name: 'Custom Playlist',
-      url: code,
-      username: code,
-      password: code,
-    );
-  }
-
-  static Future<void> removeActivationCode() async {
-    await clearMediaSource();
   }
 
   // Media Source (BYOC)
@@ -51,7 +29,6 @@ class StorageService {
     await p.setString('source_url', url);
     await p.setString('source_username', username ?? '');
     await p.setString('source_password', password ?? '');
-    await p.setString(keyActivationCode, url);
   }
 
   static Future<Map<String, String>?> getMediaSource() async {
@@ -59,16 +36,6 @@ class StorageService {
     final type = p.getString('source_type');
     final url = p.getString('source_url');
     if ((type == null || type.isEmpty) && (url == null || url.isEmpty)) {
-      final legacyCode = p.getString(keyActivationCode);
-      if (legacyCode != null && legacyCode.isNotEmpty) {
-        return {
-          'type': 'sample',
-          'name': legacyCode,
-          'url': legacyCode.startsWith('http') ? legacyCode : 'https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8',
-          'username': legacyCode,
-          'password': legacyCode,
-        };
-      }
       return null;
     }
     return {
@@ -87,7 +54,6 @@ class StorageService {
     await p.remove('source_url');
     await p.remove('source_username');
     await p.remove('source_password');
-    await p.remove(keyActivationCode);
   }
 
   // Favorites

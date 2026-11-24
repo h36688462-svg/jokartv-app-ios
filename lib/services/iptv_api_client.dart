@@ -25,21 +25,6 @@ class IptvApiClient {
     seriesStreamsCache = null;
   }
 
-  static Future<Map<String, dynamic>?> verifyActivationCode(String code, {String? host}) async {
-    final h = host ?? defaultHost;
-    try {
-      final url = Uri.parse('$h/player_api.php?username=$code&password=$code');
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-        if (decoded is Map<String, dynamic>) {
-          return decoded;
-        }
-      }
-    } catch (_) {}
-    return null;
-  }
-
   static Future<List<CategoryItem>> getCategories(
     String code,
     String action, {

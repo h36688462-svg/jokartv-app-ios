@@ -24,7 +24,7 @@ class _TVSettingsScreenState extends State<TVSettingsScreen> {
     'Playback',
     'Audio / Video',
     'Language',
-    'Xtream Server',
+    'Media Server',
     'About',
   ];
 
@@ -198,12 +198,12 @@ class _TVSettingsScreenState extends State<TVSettingsScreen> {
             }),
           ],
         );
-      case 4: // Xtream Server
+      case 4: // Media Server
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Xtream API Server Connection',
+              'Media Server Connection',
               style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
